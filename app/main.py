@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi import HTTPException
 from pydantic import BaseModel
 #pydantic is a Python library that validates and structures data.
 #BaseModel is its main class — you use it to define the shape of data (like a schema)
@@ -60,47 +59,3 @@ def gifts_search(brand: Optional[str] = None, max_price: Optional[int] = None):
         if(brand is None or gift["brand"].lower() == brand.lower()) and (max_price is None or gift['price'] <= max_price)
     ]
     return {"results": results}
-
-@app.get("/gifts")
-def get_gifts_list():
-    #mock data
-    gifts =  [
-        {"id": 1, "name": "Shirt", "brand": "Nike"},
-        {"id": 2, "name": "Watch", "brand": "Fossil"}
-    ]
-    return {"results": gifts}
-
-@app.get("/user/{user_id}")
-def getUser(user_id: int):
-    return {"id": user_id, "name": "Test"}
-
-@app.get("/users/db/{user_id}")
-def get_users_from_db(user_id: int):
-    #Mock data
-    users_list = [
-    {
-        "id": 1,
-        "name": "Alice Johnson",
-        "email": "alice.johnson@example.com"
-    },
-    {
-        "id": 2,
-        "name": "Bob Smith",
-        "email": "bob.smith@example.com"
-    },
-    {
-        "id": 3,
-        "name": "Charlie Brown",
-        "email": "charlie.brown@example.com"
-    }
-]
-    results = next((user for user in users_list if user["id"] == user_id), None)
-
-    if results is None:
-        raise HTTPException(status_code=404, detail= f"User with id {user_id} does not exist")
-
-    return {"results": results}
-# next(iterator, default)
-#next(...) is a Python built-in that returns the first item from an iterator.
-#f the iterator has an item → return it.
-#f it’s empty → raise StopIteration unless you provide a default.
