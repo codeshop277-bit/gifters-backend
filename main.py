@@ -7,6 +7,7 @@ from typing import Optional
 #Optional[T] means: the value can either be type T or None.
 #(None in Python ≈ null in JS)
 #If you want a field in your API request to be not mandatory, you mark it Optional.
+import uuid
 
 app = FastAPI(title="Gifters API", version="0.1")
 
@@ -104,3 +105,29 @@ def get_users_from_db(user_id: int):
 #next(...) is a Python built-in that returns the first item from an iterator.
 #f the iterator has an item → return it.
 #f it’s empty → raise StopIteration unless you provide a default.
+
+class GiftCreate(BaseModel):
+    name: str
+    brand: Optional[str] = None
+    size: Optional[str] = None
+    color: Optional[str] = None
+
+class Gift(GiftCreate):
+    id: str     
+
+gifts_db : list[Gift] = []
+
+@app.get("/gifts-list")
+def gifts_list():
+    return gifts_db
+
+@app.post("/add-gift", response_model=Gift) # response_model=Gift this prevets from sending the whole payload as repsonse. Only params which matches the Gift will be returned
+def add_gifts(gift: GiftCreate):
+    new_gift = Gift(id = str(uuid.uuid4()), **gift.model_dump())
+    gifts_db.append(new_gift)
+    return {"gift added to db": new_gift}
+#uuid - universally unique identifier library
+# model_dump - turns python modal into plain dictionary
+# **gift **gift.model_dump()  applies model_dump to the entire gift attribute
+
+#** is the dictionary unpacking operator.
