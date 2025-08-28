@@ -138,3 +138,35 @@ def get_gift(gift_id: str):
         if gift.id == gift_id:
             return gift
         return {"error": "Gift not found"}
+
+@app.delete("/gifts/remove/{gift_id}", response_model=dict)
+def remove_gift(gift_id: str):
+    for gift in gifts_db:
+        if gift.id == gift_id:
+            gifts_db.remove(gift)
+            return {"message": "Gift removed successfully"}
+    raise HTTPException(status_code=404, detail="Gift Not found")
+
+@app.put("/gifts/update/{gift_id}", response_model=Gift)
+def update_gift(gift_id: str, updated_gift: GiftCreate):
+    for index, gift in enumerate(gifts_db): #enumerate lets you loop with both: index and item
+        if gift.id == gift_id:
+            new_gift = Gift(id=gift_id, **updated_gift.model_dump())
+            gifts_db[index] = new_gift
+            return new_gift
+    raise HTTPException(status_code=404, detail="Gift not found")
+
+class GiftPatch(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    size: Optional[str] = None
+    color: Optional[str] = None
+@app.patch("/gifts/patch/{gift_id}", response_model=Gift)
+def patch_gift(gift_id: str, patch_gift: GiftPatch):
+    for index, gift in enumerate(gifts_db):
+        if gift.id == gift_id:
+            new_data = patch_gift.model_dump(exclude_unset=True) #exclude_unset=True removes fields the user didn’t send.
+            updated_gift = gift.model_copy(update= new_data)
+            gifts_db[index]   = updated_gift
+            return updated_gift
+    raise HTTPException(status_code=404, detail="Gift not found")
