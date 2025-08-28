@@ -115,7 +115,7 @@ class GiftCreate(BaseModel):
 class Gift(GiftCreate):
     id: str     
 
-gifts_db : list[Gift] = []
+gifts_db : list[Gift] = [Gift(id="1", name="test")]
 
 @app.get("/gifts-list")
 def gifts_list():
@@ -131,3 +131,10 @@ def add_gifts(gift: GiftCreate):
 # **gift **gift.model_dump()  applies model_dump to the entire gift attribute
 
 #** is the dictionary unpacking operator.
+
+@app.get("/gifts/{gift_id}", response_model= Gift)
+def get_gift(gift_id: str): 
+    for gift in gifts_db:
+        if gift.id == gift_id:
+            return gift
+        return {"error": "Gift not found"}
