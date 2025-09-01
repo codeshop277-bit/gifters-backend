@@ -3,3 +3,6 @@ fastapi
 uvicorn[standard]
 pydantic 
 typing
+sqlalchemy
+psycopg2
+alembic
