@@ -29,6 +29,9 @@ class GiftDataBase(BaseModel):
 
 gifts_db: list[Gift] = [Gift(id= '1', name='test', size='M', color="Red")]
 
+#db: Session = Depends(get_db)
+#Depends is a dependability in fastapi. It runs it first and pass get_db response as parameter
+#db: Session means: “the variable db is expected to be of type Session.”
 def get_db():
     db = SessionLocal()
     try:
@@ -66,36 +69,60 @@ def add_gift(user_id: int, gift: GiftTemplate, db: Session = Depends(get_db)):
     #gifts_db.append(new_gift)
     return new_gift
 
-@router.get("/search/{gift_id}")
-def get_gift_by_id(gift_id: str):
-    for gift in gifts_db:
+@router.get("/search/{gift_id}", response_model=GiftResponse)
+def get_gift_by_id(gift_id: int, db: Session = Depends(get_db)):
+    gifts = db.query(Gifts).all()
+    for gift in gifts:
         if gift.id == gift_id:
             return gift
         return {"error": f"Gift with id {gift_id} not found"}
     
 @router.delete("/remove/{gift_id}")
-def remove_gifts(gift_id: str):
-    for gift in gifts_db:
-        if gift.id == gift_id:
-            gifts_db.remove(gift)
-            return gifts_db
+def remove_gifts(gift_id: str, db: Session = Depends(get_db)):
+    gift = db.query(Gifts).filter(Gifts.id == gift_id).first()
+    if not gift:
         return {"Error": f"Gift with id {gift_id} not found"}
+    db.delete(gift)
+    db.commit()
+    return {"Message": f"Gift with id {gift_id} has been deleted"}
     
-@router.put("/update/{gift_id}", response_model=Gift)
-def update_gift(gift_id: str, updated_gift: GiftCreate):
-    for index, gift in enumerate(gifts_db):
-        if gift.id == gift_id:
-            new_gift = Gift(id = gift_id, **updated_gift.model_dump())
-            gifts_db[index] = new_gift
-            return new_gift
-    raise HTTPException(status_code=404, detail="Gift not found")
+@router.put("/update/{gift_id}")
+def update_gift(gift_id: str, updated_gift: GiftCreate, db: Session = Depends(get_db)):
+    gift = db.query(Gifts).filter(Gifts.id == gift_id).first()
+    if not gift:
+        raise HTTPException(status_code=404, detail=f"Gift with id {gift_id} not found")
+    for key, value in updated_gift.model_dump().items():
+        setattr(gift, key, value)
 
-@router.patch("/patch/{gift_id}", response_model=Gift)
-def patch_gift(gift_id: str, patch: GiftPatch):
-    for index, gift in enumerate(gifts_db):
-        if gift.id == gift_id:
-            new_data = patch.model_dump(exclude_unset=True)
-            updated = gift.model_copy(update=new_data)
-            gifts_db[index] = updated
-            return updated
-    raise HTTPException(status_code=404, detail="Gift not found")
+    db.commit()
+    db.refresh(gift)
+    return {gift}
+    # for index, gift in enumerate(gifts_db):
+    #     if gift.id == gift_id:
+    #         new_gift = Gift(id = gift_id, **updated_gift.model_dump())
+    #         gifts_db[index] = new_gift
+    #         return new_gift
+    # raise HTTPException(status_code=404, detail="Gift not found")
+
+@router.patch("/patch/{gift_id}",)
+def patch_gift(gift_id: str, patch: GiftPatch, db: Session = Depends(get_db)):
+    gift = db.query(Gifts).filter(Gifts.id == gift_id).first()
+    if not gift:
+        raise HTTPException(status_code=404, detail="Gift not found")
+    
+    patch_data = patch.model_dump(exclude_unset=True)
+    
+    for key, value in patch_data.items():
+        setattr(gift, key, value)
+
+    db.commit()
+    db.refresh(gift)
+
+    return gift
+    # for index, gift in enumerate(gifts_db):
+    #     if gift.id == gift_id:
+    #         new_data = patch.model_dump(exclude_unset=True)
+    #         updated = gift.model_copy(update=new_data)
+    #         gifts_db[index] = updated
+    #         return updated
+    # raise HTTPException(status_code=404, detail="Gift not found")
