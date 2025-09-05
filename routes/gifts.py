@@ -5,6 +5,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from schemas import GiftTemplate, GiftResponse
 from models import Gifts, User
+from sqlalchemy import func
 import uuid
 
 router = APIRouter(prefix="/gifts", tags=["gifts"]) #tags is for api documentation
@@ -43,13 +44,24 @@ def get_db():
 def fetch_gifts():
     return gifts_db
 
-@router.get("/searchby")
-def gifts_search(brand: Optional[str] = None, max_price: Optional[int] = None):
-    results = [
-       gift  for gift in gifts_mock
-       if (brand is None or gift["brand"].lower() == brand.lower()) and (max_price is None or gift["price"] <= max_price)
-    ]
-    return {"filtered": results}
+@router.get("/searchby/{column}/{value}")
+def gifts_search(column: str, value: str, db:Session= Depends(get_db)):
+    allowed_columns = {"id", "name", "brand", "size", "color", "user_id"}
+    if column not in allowed_columns:
+        raise HTTPException(status_code=404, detail=f"Column {column} not found")
+    
+    column_attr = getattr(Gifts, column) #fetches an attribute dynamically from an object similar to if column == "brand":
+#     column_attr = Gifts.brand
+# else if column == "color":
+#     column_attr = Gifts.color
+
+    result = db.query(Gifts).filter(func.lower(column_attr) == value.lower().strip()).all() #returns all data with same query (array)
+    #strip() removes whitespaces
+    if not result:
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    return result
+    
 
 @router.post("/add/{user_id}", response_model=GiftResponse)
 def add_gift(user_id: int, gift: GiftTemplate, db: Session = Depends(get_db)):
