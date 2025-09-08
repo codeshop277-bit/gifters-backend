@@ -4,12 +4,25 @@ from sqlalchemy.orm import Session
 from schemas import UserCreate, UserResponse, UserLogin
 from models import User
 from utils.auth import hash_password, verify_password
+from fastapi.security import OAuth2PasswordBearer
+from utils.jwt_handlers import create_acces_token, verify_token
 
 router = APIRouter(prefix="/users", tags=["users"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-@router.get("", response_model=list[UserResponse])
-def fetch_users_list(db: Session = Depends(get_db)):
-    return db.query(User).all()
+def get_current_user(token: str= Depends(oauth2_scheme)):
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=404,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return payload 
+
+# @router.get("", response_model=list[UserResponse])
+# def fetch_users_list(db: Session = Depends(get_db)):
+#     return db.query(User).all()
 
 @router.get("/search/{id}", response_model=UserResponse)
 def search_user(id: int, db: Session = Depends(get_db)):
@@ -51,4 +64,22 @@ def login_user(user_data:UserLogin, db: Session=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalod credentials")
     
     return db_user
+
+@router.post("/login/token")
+def login_user_token(user_data: UserLogin, db: Session=Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user_data.email).first()
+    if not db_user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if not verify_password(user_data.password, db_user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_acces_token({"sub": db_user.email}) #sub is subject, what the token is about
+    print("token", token)
+    
+    return {"access_token": token, "token_type": "Bearer"}
+
+@router.get("", response_model=list[UserResponse])
+def fetch_users_list(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(User).all()
+
     
