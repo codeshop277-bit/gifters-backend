@@ -7,8 +7,14 @@ class UserCreate(BaseModel):
     email: str
     password: str
 
-class UserResponse(UserCreate):
+class UserLogin(BaseModel):
+    email: str
+    password: str
+    
+class UserResponse(BaseModel):
     id: int
+    name: str
+    email: str
 
     class Config:
         orm_mode = True   # 👈 allows returning SQLAlchemy objects

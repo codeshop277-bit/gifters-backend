@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from database import users_list, get_db
 from sqlalchemy.orm import Session
-from schemas import UserCreate, UserResponse
+from schemas import UserCreate, UserResponse, UserLogin
 from models import User
+from utils.auth import hash_password, verify_password
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -25,3 +26,29 @@ def post_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@router.post("/register", response_model=UserResponse)
+def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user_data.email).first()
+    if db_user:
+        raise HTTPException(status_code=401, detail=f"Email with id {user_data.email} already exists")
+    
+    print("Hashing password:", user_data.password)
+    hash_pass = hash_password(user_data.password)
+    print("Hashed:", hash_pass)
+    new_user = User(name=user_data.name, password=hash_pass, email=user_data.email)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@router.post("/login", response_model=UserResponse)
+def login_user(user_data:UserLogin, db: Session=Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user_data.email).first()
+    if not db_user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if not verify_password(user_data.password, db_user.password):
+        raise HTTPException(status_code=401, detail="Invalod credentials")
+    
+    return db_user
+    

@@ -6,3 +6,8 @@ typing
 sqlalchemy
 psycopg2
 alembic
+passlib
+brycpt
+cryptography
+
+
