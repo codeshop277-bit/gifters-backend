@@ -32,3 +32,11 @@ class GiftResponse(GiftTemplate):
     class Config:
         orm_mode = True
 
+class GiftOut(BaseModel):
+    id: int
+    claimed: bool
+    claimed_by: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+

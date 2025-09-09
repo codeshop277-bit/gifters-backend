@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -10,9 +10,11 @@ class Gifts(Base):
     brand = Column(String(150), nullable=True)
     size = Column(String(150), nullable=True)
     color = Column(String(150), nullable=True)
+    claimed = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable = False) #It ensures each gift must “belong to” a valid users.id.
-    owner = relationship("User", back_populates="gifts") #inks each gift back to its single owner (User).
+    owner = relationship("User", back_populates="gifts",) #inks each gift back to its single owner (User).
+    claimer=relationship("User")
 
 class User(Base):
     __tablename__ = "users"
