@@ -7,6 +7,7 @@ from schemas import GiftTemplate, GiftResponse
 from models import Gifts, User
 from sqlalchemy import func
 import uuid
+from utils.auth import get_user
 
 router = APIRouter(prefix="/gifts", tags=["gifts"]) #tags is for api documentation
 
@@ -153,3 +154,7 @@ def claim_gifts(gift_id: int, user_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(gift)
     return gift
+
+@router.get("/secure")
+def fetch_secure_gifts(current_user: User = Depends(get_user), db: Session = Depends(get_db)):
+    return db.query(Gifts).all()

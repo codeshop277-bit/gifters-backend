@@ -5,20 +5,40 @@ from schemas import UserCreate, UserResponse, UserLogin
 from models import User
 from utils.auth import hash_password, verify_password
 from fastapi.security import OAuth2PasswordBearer
-from utils.jwt_handlers import create_acces_token, verify_token
+from utils.jwt_handlers import create_acces_token, verify_token, SECRET_KEY, ALGORITHM
+from jose import JWTError, jwt
 
 router = APIRouter(prefix="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-def get_current_user(token: str= Depends(oauth2_scheme)):
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=404,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return payload 
+def get_current_user(token: str= Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credential_exception = HTTPException(
+        status_code=401,
+        detail="Invalid or expired token",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get('sub')
+        if user_id is None:
+            raise credential_exception
+    
+    except JWTError:
+        raise credential_exception
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return credential_exception
+    
+    return user
+    # payload = verify_token(token)
+    # if not payload:
+    #     raise HTTPException(
+    #         status_code=404,
+    #         detail="Invalid or expired token",
+    #         headers={"WWW-Authenticate": "Bearer"},
+    #     )
+    # return payload 
 
 # @router.get("", response_model=list[UserResponse])
 # def fetch_users_list(db: Session = Depends(get_db)):
