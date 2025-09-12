@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from database import users_list, get_db
 from sqlalchemy.orm import Session
 from schemas import UserCreate, UserResponse, UserLogin
-from models import User
+from models import User, RefreshTokens
 from utils.auth import hash_password, verify_password
 from fastapi.security import OAuth2PasswordBearer
 from utils.jwt_handlers import create_acces_token, verify_token, SECRET_KEY, ALGORITHM
 from jose import JWTError, jwt
+import secrets
 
 router = APIRouter(prefix="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -93,13 +94,35 @@ def login_user_token(user_data: UserLogin, db: Session=Depends(get_db)):
     if not verify_password(user_data.password, db_user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_acces_token({"sub": db_user.email}) #sub is subject, what the token is about
-    print("token", token)
+    access_token = create_acces_token({"sub": db_user.email}) #sub is subject, what the token is about
+    refresh = secrets.token_hex(32)
+    print("token", access_token)
+    db.add(RefreshTokens(user_id=db_user.id, token= refresh))
+    db.commit()
     
-    return {"access_token": token, "token_type": "Bearer"}
+    return {"access_token": access_token, "refresh_token": refresh}
 
 @router.get("", response_model=list[UserResponse])
 def fetch_users_list(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(User).all()
 
+
+@router.get("/logout")
+def logout_user(refresh_token: str, db: Session = Depends(get_db)):
+    deleted = db.query(RefreshTokens).filter(RefreshTokens.token == refresh_token).delete()
+    if not deleted:
+        raise HTTPException(status_code=401, detail="Token not found")
     
+    db.commit()
+    return {"msg": "User logged out successfully"}
+
+@router.get("/refresh")
+def refresh(refresh_token: str=Header(..., alias="X-Refresh-Token"), db: Session = Depends(get_db)):
+    print(refresh_token)
+    token = db.query(RefreshTokens).filter(RefreshTokens.token == refresh_token).first()
+    print('token:::', token.user.email)
+    if not token:
+        raise HTTPException(status_code=401, detail="Token not found")
+    new_token= create_acces_token({"sub":  token.user.email})
+
+    return {'access_token': new_token}

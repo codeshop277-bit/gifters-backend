@@ -26,3 +26,18 @@ class User(Base):
     name = Column(String(100), nullable=False)
 
     gifts = relationship("Gifts", back_populates="owner") #“A single User can have many Gifts linked to them.”
+
+class RefreshTokens(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String(155), unique=True, nullable=False)
+
+    user=relationship("User")
+
+#relationship --> does not create a new column in db. It adds owner attribut in all gifts and gifts attributes in all users. 
+    #So we can access gift.owner.name or users.gifts 
+#back_populates connects two tables in relationship
+#Foreign key --> Points to the primary key in another table, or Create a link between rows in two tables
+    #i.e, Each gift belongs to one user from gift table
