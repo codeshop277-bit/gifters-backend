@@ -9,5 +9,10 @@ alembic
 passlib
 brycpt
 cryptography
+authlib 
+python-jose[cryptography] 
+python-dotenv
+httpx
+
 
 

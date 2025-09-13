@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from database import Base
+from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 
 class Gifts(Base):
@@ -35,6 +36,15 @@ class RefreshTokens(Base):
     token = Column(String(155), unique=True, nullable=False)
 
     user=relationship("User")
+
+class ExternalUser(Base):
+    __tablename__ = "external_users"
+
+    id=Column(Integer, primary_key=True)
+    google_id=Column(String(155), unique=True, index=True)
+    name=Column(String(100))
+    email=Column(String(100), unique=True)
+    created_at=Column(DateTime, default=datetime.now(timezone.utc))
 
 #relationship --> does not create a new column in db. It adds owner attribut in all gifts and gifts attributes in all users. 
     #So we can access gift.owner.name or users.gifts 
