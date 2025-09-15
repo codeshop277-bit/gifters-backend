@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from database import Base
 from datetime import datetime, timezone
+import uuid
 from sqlalchemy.orm import relationship
 
 class Gifts(Base):
@@ -27,6 +28,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
 
     gifts = relationship("Gifts", back_populates="owner") #“A single User can have many Gifts linked to them.”
+    gifts_list=relationship("GiftsList", back_populates="user")
 
 class RefreshTokens(Base):
     __tablename__ = "refresh_tokens"
@@ -45,6 +47,16 @@ class ExternalUser(Base):
     name=Column(String(100))
     email=Column(String(100), unique=True)
     created_at=Column(DateTime, default=datetime.now(timezone.utc))
+
+class GiftsList(Base):
+    __tablename__ = "gifts_list"
+
+    id=Column(Integer, primary_key=True)
+    user_id=Column(Integer, ForeignKey("users.id"))
+    created_at=Column(DateTime, default=datetime.now(timezone.utc))
+    share_token=Column(String(155), unique=True, index=True, default=lambda: str(uuid.uuid4()))
+
+    user=relationship("User", back_populates="gifts_list")
 
 #relationship --> does not create a new column in db. It adds owner attribut in all gifts and gifts attributes in all users. 
     #So we can access gift.owner.name or users.gifts 
