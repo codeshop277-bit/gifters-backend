@@ -70,13 +70,13 @@ def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
     print("Hashing password:", user_data.password)
     hash_pass = hash_password(user_data.password)
     print("Hashed:", hash_pass)
-    new_user = User(name=user_data.name, password=hash_pass, email=user_data.email)
+    new_user = User(name=user_data.name, password=user_data.password, hashed_password= hash_pass, email=user_data.email)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login/basic", response_model=UserResponse)
 def login_user(user_data:UserLogin, db: Session=Depends(get_db)):
     db_user = db.query(User).filter(User.email == user_data.email).first()
     if not db_user:
@@ -86,12 +86,12 @@ def login_user(user_data:UserLogin, db: Session=Depends(get_db)):
     
     return db_user
 
-@router.post("/login/token")
+@router.post("/login")
 def login_user_token(user_data: UserLogin, db: Session=Depends(get_db)):
     db_user = db.query(User).filter(User.email == user_data.email).first()
     if not db_user:
         raise HTTPException(status_code=401, detail="User not found")
-    if not verify_password(user_data.password, db_user.password):
+    if not verify_password(user_data.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     access_token = create_acces_token({"sub": db_user.email}) #sub is subject, what the token is about
