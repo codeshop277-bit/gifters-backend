@@ -24,6 +24,9 @@ class GiftTemplate(BaseModel):
     brand: Optional[str] = None
     size: Optional[str] = None
     color: Optional[str] = None
+    link: str
+    note: str
+    price: str
 
 class GiftResponse(GiftTemplate):
     id: int

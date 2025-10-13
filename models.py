@@ -12,6 +12,9 @@ class Gifts(Base):
     brand = Column(String(150), nullable=True)
     size = Column(String(150), nullable=True)
     color = Column(String(150), nullable=True)
+    link = Column(String(500), nullable=False)
+    price = Column(Integer, nullable=False)
+    note = Column(String(250), nullable=True)
     claimed = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable = False) #It ensures each gift must “belong to” a valid users.id.
