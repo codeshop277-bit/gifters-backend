@@ -96,11 +96,12 @@ def login_user_token(user_data: UserLogin, db: Session=Depends(get_db)):
     
     access_token = create_acces_token({"sub": db_user.email}) #sub is subject, what the token is about
     refresh = secrets.token_hex(32)
-    print("token", access_token)
+    print("token", db_user)
     db.add(RefreshTokens(user_id=db_user.id, token= refresh))
     db.commit()
     
-    return {"access_token": access_token, "refresh_token": refresh}
+    return {"access_token": access_token, "user": UserResponse.from_orm(db_user)} # returning a raw model instance like db_user will not be seialized to JSON so 
+# it will always be {}. to counter this UserResponse.from_orm(db_user
 
 @router.get("", response_model=list[UserResponse])
 def fetch_users_list(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):

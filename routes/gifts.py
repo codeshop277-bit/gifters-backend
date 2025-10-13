@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from database import gifts_mock, SessionLocal
 from pydantic import BaseModel
 from typing import List, Optional
@@ -8,6 +8,7 @@ from models import Gifts, User
 from sqlalchemy import func
 import uuid
 from utils.auth import get_user
+from utils.jwt_handlers import verify_token
 
 router = APIRouter(prefix="/gifts", tags=["gifts"]) #tags is for api documentation
 
@@ -41,7 +42,7 @@ def get_db():
     finally:
         db.close()
 #Returns database
-@router.get("")
+@router.get("/fetch")
 def fetch_gifts():
     return gifts_db
 
@@ -65,17 +66,21 @@ def gifts_search(column: str, value: str, db:Session= Depends(get_db)):
     
 
 @router.post("/add/{user_id}", response_model=GiftResponse)
-def add_gift(user_id: int, gift: GiftTemplate, db: Session = Depends(get_db)):
+def add_gift(user_id: int, gift: GiftTemplate, db: Session = Depends(get_db), authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing authorization header")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    new_gift = Gifts(
-        name = gift.name,   
-        brand = gift.brand,
-        size = gift.size,
-        color = gift.color,
-        user_id = user_id
-    )
+    try:
+        token = authorization.split(" ")[1]
+    except IndexError:
+        raise HTTPException(status_code=401, detail="Invalid format")
+    payload = verify_token(token)
+    if not payload: 
+        raise HTTPException(status_code=401, detail="Invalid token")
+    gifts_data = gift.dict(exclude_unset=True)
+    new_gift = Gifts(**gifts_data, user_id=user_id)
     db.add(new_gift)
     db.commit()
     db.refresh(new_gift)
