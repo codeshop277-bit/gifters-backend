@@ -42,9 +42,22 @@ def get_db():
     finally:
         db.close()
 #Returns database
-@router.get("/fetch")
-def fetch_gifts():
-    return gifts_db
+@router.get("/fetch/{user_id}", response_model=List[GiftResponse])
+def fetch_gifts(user_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing authorization")
+    gifts = db.query(Gifts).filter(Gifts.user_id == user_id).all()
+    if not gifts:
+        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        token = authorization.split(" ")[1]
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Invalid format")
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    return gifts
 
 @router.get("/searchby/{column}/{value}")
 def gifts_search(column: str, value: str, db:Session= Depends(get_db)):

@@ -31,6 +31,10 @@ class GiftTemplate(BaseModel):
 class GiftResponse(GiftTemplate):
     id: int
     user_id: int
+    link: Optional[str]
+    price: Optional[int]
+    claimed: Optional[bool]
+    name: Optional[str]
 
     class Config:
         orm_mode = True
