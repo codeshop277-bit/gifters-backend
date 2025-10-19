@@ -161,14 +161,25 @@ def patch_gift(gift_id: str, patch: GiftPatch, db: Session = Depends(get_db)):
 
     #Claim GIFT
 @router.get("/claim/{gift_id}/{user_id}")
-def claim_gifts(gift_id: int, user_id: int, db: Session = Depends(get_db)):
-    gift = db.query(Gifts).filter(Gifts.id == gift_id).first()
+def claim_gifts(gift_id: int, user_id: int, db: Session = Depends(get_db), authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        token = authorization.split(" ")[1]
+    except IndexError:
+        raise HTTPException(status_code=401, detail="Invalid format")
+    payload = verify_token(token)
+    if not payload: 
+        raise HTTPException(status_code=401, detail="Invalid token")
+    gift = db.query(Gifts).filter(Gifts.id == gift_id, Gifts.user_id == user_id).first()
     if not gift:
         raise HTTPException(status_code=404, detail="Gift not found")
-    if gift.claimed:
-        raise HTTPException(status_code=400, detail="Gift already claimed")
     
-    gift.claimed = True
+    
+    gift.claimed = not gift.claimed
     gift.user_id = user_id
     db.commit()
     db.refresh(gift)
