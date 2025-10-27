@@ -11,6 +11,11 @@ class UserLogin(BaseModel):
     email: str
     password: str
     
+class UserGuest(BaseModel):
+    email: str
+    name: str
+    provider_id: str
+
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -18,6 +23,10 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True   # 👈 allows returning SQLAlchemy objects
+
+class GuestResponse(BaseModel):
+    user: UserResponse
+    access_token: str
 
 class GiftTemplate(BaseModel):
     name: str

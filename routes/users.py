@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from database import users_list, get_db
 from sqlalchemy.orm import Session
-from schemas import UserCreate, UserResponse, UserLogin
+from schemas import UserCreate, UserResponse, UserLogin, UserGuest, GuestResponse
 from models import User, RefreshTokens
 from utils.auth import hash_password, verify_password
 from fastapi.security import OAuth2PasswordBearer
@@ -85,6 +85,26 @@ def login_user(user_data:UserLogin, db: Session=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalod credentials")
     
     return db_user
+
+@router.post("/guest/login", response_model=GuestResponse)
+def guest_login(user_data: UserGuest, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user_data.email).first()
+    if db_user:
+        access_token = create_acces_token({"sub": db_user.email})
+        refresh = secrets.token_hex(32)
+        db.add(RefreshTokens(user_id= db_user.id, token=refresh))
+        db.commit()
+        return {"access_token": access_token, "user": UserResponse.from_orm(db_user)}
+    else:
+        new_user = User(name=user_data.name, email=user_data.email, auth_provider="google", mode="guest", provider_id = user_data.provider_id)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        reg_access_token = create_acces_token({"sub": new_user.email})
+        reg_refresh = secrets.token_hex(32)
+        db.add(RefreshTokens(user_id=new_user.id, token=reg_refresh))
+        db.commit()
+        return {"access_token": reg_access_token, "user": UserResponse.from_orm(new_user)}
 
 @router.post("/login")
 def login_user_token(user_data: UserLogin, db: Session=Depends(get_db)):
