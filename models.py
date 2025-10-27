@@ -1,9 +1,15 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Enum
 from database import Base
 from datetime import datetime, timezone
 import uuid
+import enum
 from sqlalchemy.orm import relationship
 
+class AuthProvider(enum.Enum):
+    local="local"
+    google="google"
+    guest="guest"
+    user="user"
 class Gifts(Base):
     __tablename__ = "gifts"
 
@@ -27,9 +33,12 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(150), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=True)
-    password = Column(String(200), nullable=False)
+    password = Column(String(200), nullable=True)
     name = Column(String(100), nullable=False)
-
+    auth_provider = Column(Enum(AuthProvider), default=AuthProvider.local,nullable=False) #(Enum(AuthProvider), can only contain values from specified enum
+    mode = Column(Enum(AuthProvider), default=AuthProvider.user, nullable=False)
+    provider_id = Column(String(150), nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc) )
     gifts = relationship("Gifts", back_populates="owner") #“A single User can have many Gifts linked to them.”
     gifts_list=relationship("GiftsList", back_populates="user")
 
