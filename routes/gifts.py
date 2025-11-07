@@ -99,7 +99,7 @@ def add_gift(user_id: int, gift: GiftTemplate, db: Session = Depends(get_db), au
     db.refresh(new_gift)
     gifts = db.query(Gifts).filter(Gifts.user_id == user_id).all()
     #gifts_db.append(new_gift)
-    return gifts
+    return new_gift
 
 @router.get("/search/{gift_id}", response_model=GiftResponse)
 def get_gift_by_id(gift_id: int, db: Session = Depends(get_db)):

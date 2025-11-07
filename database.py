@@ -4,8 +4,15 @@ from sqlalchemy.orm import sessionmaker
 
 #create_engine → Creates a connection to the database (engine is the “core” interface to the DB)
 #sessionmaker ->Factory for creating new Session objects (sessions are used to talk to the DB).
+DB_HOST = "gifters.cx8wyeoaoo49.eu-north-1.rds.amazonaws.com"
+DB_PORT = "5432"
+DB_USER = "postgres"
+DB_PASSWORD = "#Balaji27"
+DB_NAME = "postgres"
 
-DATABASE_URL = "mysql+mysqlconnector://root:balaji27@localhost:3307/giftersdb"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 db = SessionLocal()   # creates a new session

@@ -37,7 +37,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
     auth_provider = Column(Enum(AuthProvider), default=AuthProvider.local,nullable=False) #(Enum(AuthProvider), can only contain values from specified enum
     mode = Column(Enum(AuthProvider), default=AuthProvider.user, nullable=False)
-    provider_id = Column(String(150), nullable=False)
+    provider_id = Column(String(150), nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc) )
     gifts = relationship("Gifts", back_populates="owner") #“A single User can have many Gifts linked to them.”
     gifts_list=relationship("GiftsList", back_populates="user")
