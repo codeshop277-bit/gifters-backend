@@ -19,3 +19,6 @@ app.include_router(gifts.router)
 app.include_router(users.router)
 app.include_router(share.router)
 #app.include_router(auths.router)
+@app.get("/", tags=["Root"])
+def read_root():
+    return {"message": "Gifters backend is running successfully 🎉"}
