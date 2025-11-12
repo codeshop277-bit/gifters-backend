@@ -23,7 +23,7 @@ Security group config --> virtual firewall, controls which network traffic is al
 Connect to your EC2 instance via git bash
 Go to your ec2-key file path and connect to your ubuntu 
 
-ssh -i your-key.pem ubuntu@13.48.58.135 ==> Public IP from created instance
+ssh -i my-ec2-key.pem ubuntu@13.48.58.135 ==> Public IP from created instance
 And install dependencies in your EC2 terminal
 sudo apt update
 sudo apt install python3-pip python3-venv git nginx -y
@@ -41,5 +41,7 @@ Create a isolated virtual env to install repo related dependencies
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
 
+http://13.48.58.135:8000
  
