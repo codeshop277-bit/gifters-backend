@@ -44,4 +44,8 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000
 
 http://13.48.58.135:8000
+PYTHONPATH=/home/ubuntu/gifters_backend pm2 start "/home/ubuntu/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000" --name fastapi-app
+pm2 start "/home/ubuntu/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000" --name fastapi-app --cwd /home/ubuntu/gifters_backend
+PYTHONPATH tells Python, “pretend this folder is the top-level package root.”
+curl http://127.0.0.1:8000
  
