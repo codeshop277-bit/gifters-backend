@@ -44,8 +44,34 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000
 
 http://13.48.58.135:8000
-PYTHONPATH=/home/ubuntu/gifters_backend pm2 start "/home/ubuntu/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000" --name fastapi-app
-pm2 start "/home/ubuntu/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000" --name fastapi-app --cwd /home/ubuntu/gifters_backend
-PYTHONPATH tells Python, “pretend this folder is the top-level package root.”
-curl http://127.0.0.1:8000
- 
+
+Serve instance 24*7
+Create a systemd service file describing how to run Uvicorn.
+Create and open the file --> sudo nano /etc/systemd/system/fastapi.service
+
+
+[Unit]
+Description=FastAPI Uvicorn service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/gifters_backend
+ExecStart=/home/ubuntu/gifters_backend/venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+ctrl + o - save; ctrl + x - exit
+Reload, start and enable the service
+sudo systemctl daemon-reload
+sudo systemctl start fastapi
+sudo systemctl enable fastapi
+sudo systemctl restart fastapi
+sudo systemctl status fastapi
