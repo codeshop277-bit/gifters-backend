@@ -7,7 +7,7 @@ sqlalchemy
 psycopg2
 alembic
 passlib
-brycpt
+bcrypt
 cryptography
 authlib 
 python-jose[cryptography] 
