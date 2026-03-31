@@ -172,17 +172,3 @@ def patch_gift(gift_id: str, patch_gift: GiftPatch):
     raise HTTPException(status_code=404, detail="Gift not found")
 
 
-class GiftPatch(BaseModel):
-    name: Optional[str] = None
-    brand: Optional[str] = None
-    size: Optional[str] = None
-    color: Optional[str] = None
-@app.patch("/gifts/patch/{gift_id}", response_model=Gift)
-def patch_gift(gift_id: str, patch_gift: GiftPatch):
-    for index, gift in enumerate(gifts_db):
-        if gift.id == gift_id:
-            new_data = patch_gift.model_dump(exclude_unset=True) #exclude_unset=True removes fields the user didn’t send.
-            updated_gift = gift.model_copy(update= new_data)
-            gifts_db[index]   = updated_gift
-            return updated_gift
-    raise HTTPException(status_code=404, detail="Gift not found")
