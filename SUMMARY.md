@@ -1,1 +1,0 @@
-C:\Users\Balaji\Projects\agentic_new\agentic\gifters-backend_summary.md
