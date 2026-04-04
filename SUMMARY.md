@@ -44,25 +44,24 @@ This file sets up SQLAlchemy database connection and provides mock data for a gi
 
 ### `\main.py`
 
-# Code Summary: FastAPI Backend for Gifters Application
+# Code Summary: FastAPI Application Entry Point
 
-**Purpose:** Main entry point for a FastAPI-based gift management backend service.
+## Purpose
+This is the main application file for a **FastAPI backend service called "Gifters"** - appears to be a gift management/sharing application.
 
-**Key Components:**
+## Key Setup
+- **CORS Configuration**: Enables cross-origin requests from `http://localhost:3000` (frontend), allowing credentials and all HTTP methods/headers
+- **Database Initialization**: Calls `init_db()` to set up the database on startup
+- **Router Integration**: Registers API routes for:
+  - `gifts` - gift management endpoints
+  - `users` - user management endpoints
+  - `share` - sharing functionality (auths router commented out)
 
-1. **CORS Configuration** - Enables cross-origin requests from `localhost:3000` with full credential and method support, allowing frontend communication.
+## Important Components
+- **Root endpoint** (`GET /`): Health check returning a success message
+- **Middleware**: CORS middleware is configured to allow browser-based requests from the frontend
 
-2. **Database Initialization** - Calls `init_db()` to set up the database on startup.
-
-3. **Route Registration** - Includes routers for:
-   - `gifts` - Gift management operations
-   - `users` - User management
-   - `share` - Sharing functionality
-   - `auths` - Authentication (imported but not registered)
-
-4. **Root Endpoint** - Simple health check at `/` returning a success message.
-
-**Note:** The `auths` router is imported but not included in the app, suggesting incomplete setup or dead code.
+This is a minimal, clean setup typical of a FastAPI microservice with basic CORS handling and modular route organization.
 
 ---
 
