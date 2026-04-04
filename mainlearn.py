@@ -177,7 +177,7 @@ class GiftPatch(BaseModel):
     brand: Optional[str] = None
     size: Optional[str] = None
     color: Optional[str] = None
-@app.patch("/gifts/patch/{gift_id}", response_model=Gift)
+@app.patch("/gifts/patch/{gift_id}/request/new", response_model=Gift)
 def patch_gift(gift_id: str, patch_gift: GiftPatch):
     for index, gift in enumerate(gifts_db):
         if gift.id == gift_id:
