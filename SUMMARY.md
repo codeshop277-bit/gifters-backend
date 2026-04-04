@@ -2,13 +2,14 @@
 
 **Repository name:** gifters-backend
 
-**Total files analyzed:** 1
+**Total files analyzed:** 2
 
 ---
 
 ## Table of Contents
 
 - [\database.py](#\databasepy)
+- [\main.py](#\mainpy)
 
 ---
 
@@ -16,26 +17,52 @@
 
 ### `\database.py`
 
-# Database Configuration & Session Management
+# Summary: Database Configuration & Mock Data
 
 ## Purpose
-Sets up SQLAlchemy ORM connection to a PostgreSQL database on AWS RDS and provides database session management utilities.
+This file sets up SQLAlchemy database connection and provides mock data for a gift application.
 
 ## Key Components
 
-**Database Connection:**
-- Configures PostgreSQL connection via `DATABASE_URL` using AWS RDS credentials
-- Creates `engine` (core DB interface) and `SessionLocal` (session factory)
+**Database Setup:**
+- Connects to AWS RDS PostgreSQL instance using connection string with credentials
+- Creates `engine` (DB connection pool) and `SessionLocal` (session factory)
+- Defines `Base` as the declarative base for all ORM models
 
-**Core Functions:**
-- `init_db()` - Creates all database tables defined in ORM models (inheriting from `Base`)
-- `get_db()` - Dependency injection function; yields a DB session and ensures cleanup via try/finally
+**Key Functions:**
+- `init_db()` - Creates all database tables defined in ORM models
+- `get_db()` - Dependency injection function that yields a DB session and ensures cleanup
 
-**ORM Setup:**
-- `Base = declarative_base()` - Factory for ORM model base class; all models inherit from this for table mapping
+**Mock Data:**
+- `gifts_mock` - List of 3 sample gift objects (Shirt, Cap, Shoes)
+- `users_list` - List of 3 sample user objects with name and email
 
-## Security Note
-⚠️ **Credentials hardcoded** - DB password and connection details exposed in source code (should use environment variables instead)
+## Notable Issues
+⚠️ **Security Risk**: Database credentials (password, host) are hardcoded. Should use environment variables instead.
+
+---
+
+### `\main.py`
+
+# Code Summary: FastAPI Backend for Gifters Application
+
+**Purpose:** Main entry point for a FastAPI-based gift management backend service.
+
+**Key Components:**
+
+1. **CORS Configuration** - Enables cross-origin requests from `localhost:3000` with full credential and method support, allowing frontend communication.
+
+2. **Database Initialization** - Calls `init_db()` to set up the database on startup.
+
+3. **Route Registration** - Includes routers for:
+   - `gifts` - Gift management operations
+   - `users` - User management
+   - `share` - Sharing functionality
+   - `auths` - Authentication (imported but not registered)
+
+4. **Root Endpoint** - Simple health check at `/` returning a success message.
+
+**Note:** The `auths` router is imported but not included in the app, suggesting incomplete setup or dead code.
 
 ---
 
