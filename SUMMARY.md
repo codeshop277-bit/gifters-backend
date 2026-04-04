@@ -2,7 +2,7 @@
 
 **Repository name: gifters-backend
 
-**Total files analyzed: 14 
+**Total files analyzed: 15 
 
 ------------
 
@@ -14,6 +14,7 @@
 - [\models.py](#\modelspy)
 - [\README.md](#\readmemd)
 - [\schemas.py](#\schemaspy)
+- [\SUMMARY.md](#\summarymd)
 - [\__init__.py](#\initpy)
 - [\app\main.py](#\app\mainpy)
 - [\routes\auths.py](#\routes\authspy)
@@ -28,59 +29,53 @@
 ## File summary 
 
 - [\database.py](#\databasepy)
-- [# Summary
+- [# Code Summary
 
-**Purpose:** Database configuration and initialization file for a gift management application using PostgreSQL.
+## Purpose
+Database configuration and initialization module for a gift-tracking application using SQLAlchemy ORM with PostgreSQL.
 
-**Key Logic:**
-- Establishes PostgreSQL connection to AWS RDS using SQLAlchemy ORM
-- Sets up session factory for database interactions
-- Provides database initialization and session management utilities
-
-**Important Components:**
+## Key Components
 
 1. **Database Connection**
-   - `DATABASE_URL`: PostgreSQL connection string to AWS RDS instance
-   - `engine`: Core database connection interface
+   - Configures PostgreSQL connection to AWS RDS instance
+   - Creates engine and sessionmaker for database operations
 
-2. **Session Management**
-   - `SessionLocal`: Factory for creating new ORM sessions
-   - `get_db()`: Generator function providing session dependency injection with automatic cleanup
+2. **Core Objects**
+   - `engine`: Database connection pool
+   - `SessionLocal`: Factory for creating DB sessions
+   - `Base`: Declarative base class for all ORM models to inherit from
 
-3. **ORM Setup**
-   - `Base`: Declarative base class inherited by all ORM models
-   - `init_db()`: Creates all tables defined in models
+3. **Key Functions**
+   - `init_db()`: Creates all database tables based on defined models
+   - `get_db()`: Generator that provides DB sessions with automatic cleanup (for dependency injection in FastAPI)
 
-4. **Mock Data**
-   - `gifts_mock`: Sample gift catalog (3 items with id, name, brand, price)
-   - `users_list`: Sample user data (3 users with id, name, email)
+4. **Mock Data** (for testing)
+   - `gifts_mock`: Sample gift items with id, name, brand, price
+   - `users_list`: Sample users with id, name, email
 
-**Note:** Credentials are hardcoded (security risk - should use environment variables).](#\databasepy)
+## Important Notes
+⚠️ **Security Issue**: Database credentials (password, host) are hardcoded in source code—should use environment variables instead.](#\databasepy)
 
 ---
 
 - [\main.py](#\mainpy)
 - [# Code Summary
 
-**Purpose:** Main entry point for a FastAPI backend application called "Gifters" - likely a gift management/sharing system.
+**Purpose:** Main entry point for a FastAPI-based "Gifters" backend application - a gift management system with user and sharing features.
 
 **Key Components:**
 
-1. **CORS Middleware Configuration**
-   - Allows cross-origin requests from `http://localhost:3000` (frontend dev server)
-   - Enables credentials and permits all HTTP methods/headers
+1. **CORS Configuration** - Enables cross-origin requests from `localhost:3000` (frontend), allowing credentials and all HTTP methods/headers
+2. **Database Initialization** - Calls `init_db()` to set up database on startup
+3. **Route Registration** - Includes routers for:
+   - `gifts` - Gift management endpoints
+   - `users` - User management endpoints
+   - `share` - Sharing functionality
+   - `auths` - Authentication (currently disabled)
 
-2. **Database Initialization**
-   - Calls `init_db()` to set up the database on startup
+4. **Root Endpoint** - Simple GET `/` health check returning a success message
 
-3. **Route Registration**
-   - Includes routers for: gifts, users, share functionality
-   - Auths router commented out (possibly under development)
-
-4. **Root Endpoint**
-   - Simple health check GET `/` that returns a success message
-
-**Key Logic:** Minimal business logic here—this is purely API setup and configuration. The actual functionality is delegated to imported routers (gifts, users, share, auths).](#\mainpy)
+**Architecture:** Standard FastAPI app setup with middleware, database initialization, and modular route organization.](#\mainpy)
 
 ---
 
@@ -88,345 +83,405 @@
 - [# Code Summary: Gifters API
 
 ## Purpose
-A FastAPI-based REST API for a gift management system. Provides endpoints for greeting users, searching/listing gifts, echoing text, and retrieving user information.
+FastAPI-based REST API for a gift management system with search, listing, and user endpoints.
 
 ## Key Components
 
-**Data Models:**
-- `EchoPayload`: Pydantic schema validating POST request body with `text` (required) and `repeat` (optional, default=1)
+**Framework & Setup:**
+- FastAPI application with Pydantic models for request validation
+- `EchoPayload` model defines schema for echo endpoint (text + repeat count)
 
-**Core Endpoints:**
+**Endpoints:**
 
 | Method | Route | Purpose |
 |--------|-------|---------|
 | GET | `/` | Root health check |
-| GET | `/ping` | Status check |
-| GET | `/greet/{name}` | Basic greeting with path parameter |
-| GET | `/greet-adv/{name}` | Advanced greeting with optional query params (`excited`, `times`) |
-| POST | `/echo` | Repeats text based on payload |
-| GET | `/gifts` | Returns hardcoded gift list |
-| GET | `/gifts/search` | Filters gifts by optional `brand` and `max_price` query params |
-| GET | `/user/{user_id}` | Mock user lookup by ID |
-| GET | `/users/db/{user_id}` | Fetch user from mock database (incomplete) |
+| GET | `/ping` | Ping/status endpoint |
+| GET | `/greet/{name}` | Simple greeting with path parameter |
+| GET | `/greet-adv/{name}` | Advanced greeting with query params (excited, times) |
+| POST | `/echo` | Echoes text N times (validates body with EchoPayload) |
+| GET | `/gifts` | List all gifts (mock data) |
+| GET | `/gifts/search` | Filter gifts by brand & max_price (optional query params) |
+| GET | `/user/{user_id}` | Get single user by ID |
+| GET | `/users/db/{user_id}` | Get user from mock DB |
 
 ## Important Logic
-- **Query filtering**: `/gifts/search`](#\mainlearnpy)
+- **Query filtering** (`/gifts/search`): Filters mock gift list using Python list comprehension with optional parameters
+- **Path/query parameters**: Demonstrates FastAPI's automatic type validation and parameter extraction
+- **Request body validation**: `EchoPayload` enforces required fields and defaults
+- **Mock data**: All endpoints return hardcoded sample data (no real database)
+
+## Status
+Work-in-progress (v0.1) — endpoints are partially implemented with mock data only.](#\mainlearnpy)
 
 ---
 
 - [\models.py](#\modelspy)
-- [# Code Summary
+- [# Code Summary: SQLAlchemy Database Models
 
 ## Purpose
-Defines SQLAlchemy ORM models for a gift-sharing application with user authentication and gift list management.
+Defines the database schema for a gift-sharing application using SQLAlchemy ORM, including user authentication, gift management, and sharing functionality.
 
 ## Key Models
 
 **User**
-- Core user entity with email, password, name
+- Core user entity with email, hashed password, and name
 - Supports multiple auth providers (local, Google, guest)
 - One-to-many relationship with Gifts and GiftsList
 
 **Gifts**
-- Gift items with properties: name, brand, size, color, price, link, note
-- Includes `claimed` boolean flag to track if gift is reserved
-- Foreign key to User (owner)
-- One gift belongs to one user
-
-**RefreshTokens**
-- Stores JWT refresh tokens for user sessions
-- Links tokens to users for authentication validation
+- Represents individual gift items with details (name, brand, size, color, price, link)
+- Tracks claim status via `claimed` boolean flag
+- Foreign key to User (owner) and relationship to claimer
+- Price stored as integer (likely cents)
 
 **GiftsList**
-- Represents shareable gift lists per user
-- Auto-generates unique `share_token` (UUID) for sharing
-- One user can have multiple gift lists
+- Creates shareable gift lists per user
+- Uses UUID for unique `share_token` enabling public list sharing
+- One-to-many with User
+
+**RefreshTokens**
+- Stores JWT refresh tokens for session management
+- Links tokens to users via foreign key
 
 **ExternalUser**
-- Stores Google OAuth user data
-- Separate from main User table for external auth tracking
+- Tracks OAuth users (Google authentication)
+- Stores Google ID and basic user info
 
-## Important Logic
-- **Enum constraints**: `AuthProvider` enum restricts auth types to local/Google/guest/user
-- **Relationships**: Back_populates creates bidirectional references without extra DB columns
-- **Timestamps**: Auto-populated `created_at` using UTC timezone
-- **Unique constraints**: Email](#\modelspy)
+**AuthProvider Enum**
+- Defines authentication types: local, Google, guest, user
+
+## Key Logic
+- Relationships use `back_populates` for bidirectional navigation (e.g., User ↔ Gifts)
+- Timestamps default to UTC
+- Share tokens auto-generate as UUIDs for gift list sharing](#\modelspy)
 
 ---
 
 - [\README.md](#\readmemd)
-- [# Gifters-Backend: Deployment & Setup Guide
+- [# Summary: Gifters Backend Deployment Guide
 
-## **Purpose**
-This document outlines the complete setup and deployment pipeline for a FastAPI backend application, covering database migrations, AWS infrastructure setup, and production deployment.
+## Purpose
+Documentation for deploying a FastAPI backend application to AWS, including database setup, EC2 hosting, and production service configuration.
 
-## **Key Sections**
+## Key Sections
 
-### 1. **Database Migrations (Alembic)**
-- Auto-generate schema changes and version control database migrations
-- Commands: `alembic revision --autogenerate`, `alembic upgrade head`
+### 1. **Database Management (Alembic)**
+- Commands to generate and apply database migrations
+- Adds/modifies columns in existing tables
+- Example: Adding hashed password column to users table
 
-### 2. **AWS RDS Database Setup**
-- Host PostgreSQL/MySQL in AWS RDS
-- Configure connection credentials (host, port, credentials)
-- Link database URL to backend environment
+### 2. **AWS RDS Setup**
+- Host PostgreSQL/MySQL database on AWS RDS
+- Configure connection credentials (host, port, etc.)
+- Connect backend to remote database
 
-### 3. **AWS EC2 Deployment**
-- **Key Pair**: SSH authentication for secure instance access
-- **Security Groups**: Firewall rules controlling inbound/outbound traffic
-- **Instance Setup**: Install Python, pip, venv, git, and nginx dependencies
+### 3. **AWS EC2 Instance Setup**
+- Launch EC2 instance for backend hosting
+- Configure **Key Pair**: SSH authentication for instance access
+- Configure **Security Groups**: 
+  - Inbound rules: control incoming traffic
+  - Outbound rules: control outgoing connections
 
-### 4. **Manual Server Configuration**
-- Clone repository, create isolated Python virtual environment
-- Install dependencies via `pip install -r requirements.txt`
-- Start server: `uvicorn main:app --host 0.0.0.0 --port 8000`
+### 4. **EC2 Environment Setup**
+Install dependencies:
+- **python3-pip**: Package manager
+- **python3-venv**: Isolated Python environments
+- **git**: Clone repositories
+- **nginx**: Production web server (reverse proxy)
 
-### 5. **Production 24/7 Service (Systemd)**
-- **Systemd Service File**: Automatically manages](#\readmemd)
+### 5. **Application Deployment**
+- Clone repository
+- Create virtual environment
+- Install dependencies via `requirements.txt`
+- Run Uvicorn: `uvicorn main:app --host 0.0.0.0 --port 8000`
+
+### 6. **Production Service (Systemd)**
+- Create systemd service file to run FastAPI 24/7
+- Auto-restart on failure
+- Manage via: `systemctl start/stop/restart/enable/status fastapi`
+
+## Result
+FastAPI backend accessible at `http://<EC2-Public-IP>:8000` with](#\readmemd)
 
 ---
 
 - [\schemas.py](#\schemaspy)
-- [# Summary: schemas.py
+- [# Code Summary: Pydantic Schemas
 
-**Purpose:** Defines Pydantic validation schemas for request/response data in a gift registry application with user authentication.
+**Purpose:** Defines request/response validation schemas for a gift-sharing application with user authentication and guest access.
 
 **Key Components:**
 
 1. **User Schemas:**
-   - `UserCreate`: Registration payload (name, email, password)
+   - `UserCreate`: Registration input (name, email, password)
    - `UserLogin`: Login credentials (email, password)
-   - `UserGuest`: Guest user creation via OAuth (email, name, provider_id)
-   - `UserResponse`: User data returned to clients (id, name, email) with ORM mode enabled
+   - `UserGuest`: OAuth/social login (email, name, provider_id)
+   - `UserResponse`: API response with user details (excludes password)
 
-2. **Authentication Response:**
-   - `GuestResponse`: Returns authenticated user + access token
+2. **Authentication:**
+   - `GuestResponse`: Returns user data + access token for authenticated sessions
 
 3. **Gift Schemas:**
-   - `GiftTemplate`: Base gift item with optional fields (brand, size, color, link, note, price)
-   - `GiftResponse`: Full gift object extending template, includes id, user_id, and claim status
-   - `GiftOut`: Minimal gift representation for listing (id, claimed status, claimed_by name)
+   - `GiftTemplate`: Base gift creation model with optional fields (brand, size, color, link, note, price)
+   - `GiftResponse`: Full gift object with ID, user ownership, and claimed status
+   - `GiftOut`: Minimal gift view showing claim status and claimer name
 
-**Important Details:**
-- All response schemas use `orm_mode = True` to seamlessly convert SQLAlchemy ORM objects to Pydantic models
-- Optional fields use `Optional[str] = None` syntax for flexible data
-- Inheritance used (`GiftResponse` extends `GiftTemplate`) to reduce duplication](#\schemaspy)
+**Important Features:**
+- All schemas use `orm_mode = True` to seamlessly convert SQLAlchemy ORM objects to responses
+- Optional fields use `Optional[type] = None` for flexible input
+- Price stored as `int` (likely cents to avoid float precision issues)
+- Separates internal models (full details) from public responses (sensitive data excluded)](#\schemaspy)
+
+---
+
+- [\SUMMARY.md](#\summarymd)
+- [# Gifters-Backend - High-Level Summary
+
+## **Purpose**
+Gifters is a FastAPI-based backend REST API for a gift-sharing/recommendation platform. It manages users, gifts, sharing functionality, and authentication.
+
+---
+
+## **Architecture Overview**
+
+| Layer | Files | Purpose |
+|-------|-------|---------|
+| **Core App** | `main.py`, `app/main.py` | FastAPI initialization, CORS setup, route registration |
+| **Database** | `database.py` | PostgreSQL (AWS RDS) connection, SQLAlchemy ORM session management |
+| **Models** | `models.py` | ORM entity definitions (Users, Gifts, etc.) |
+| **Schemas** | `schemas.py` | Pydantic request/response validation models |
+| **Routes** | `routes/` | API endpoints (gifts, users, sharing, auth) |
+| **Utils** | `utils/` | JWT authentication, token handling |
+
+---
+
+## **Key Features**
+
+✅ **Authentication** - JWT-based token handling (`jwt_handlers.py`)  
+✅ **Gift Management** - CRUD operations on gifts (`routes/gifts.py`)  
+✅ **User Management** - User profiles and data (`routes/users.py`)  
+✅ **Sharing System** - Gift sharing functionality (`routes/share.py`)  
+✅ **Security** - CORS enabled, auth utilities available  
+
+---
+
+## **Critical Issues**
+⚠️ **Hardcoded DB credentials** in `database.py` - should use environment variables  
+⚠️ **Auth routes currently disabled** in main.py
+
+---
+
+## **Frontend Integration**
+CORS configured to accept requests from `localhost](#\summarymd)
 
 ---
 
 - [\__init__.py](#\initpy)
 - [# Summary
 
-**Purpose:** This is an `__init__.py` file, which marks the containing folder as a Python package.
+**Purpose:** This is a Python package initialization file (`__init__.py`).
 
-**Key Logic:** None - this is an empty initialization file.
+**Key Points:**
+- Marks the containing directory as a Python package, allowing it to be imported as a module
+- Currently empty - no code is executed or exported
+- Enables the use of `from package import module` syntax
 
-**Important Components:** None - serves only to signal to Python that the directory should be treated as a package, enabling imports from modules within it.](#\initpy)
+**Use Case:** Standard Python convention for package structure. When present, Python treats the directory as a namespace package rather than a regular folder.](#\initpy)
 
 ---
 
 - [\app\main.py](#\app\mainpy)
 - [# Code Summary
 
-**Purpose**: Entry point for a FastAPI application called "Gifters"
+**Purpose:** Entry point for a FastAPI web application called "Gifters"
 
-**Key Logic**:
+**Key Logic:**
 - Creates a FastAPI application instance with the title "Gifters"
 - Registers a router from the `routes.gifts` module to handle gift-related endpoints
 
-**Components**:
-- `app`: FastAPI application instance
-- `gifts.router`: Router containing gift-related API routes (imported from `routes/gifts.py`)
+**Components:**
+- `app`: FastAPI application instance that serves as the main application object
+- `gifts.router`: Router imported from a separate module that contains gift-related API routes
 
-This is a minimal main file that sets up the API and mounts gift management routes.](#\app\mainpy)
+This is a minimal main application file that delegates route handling to a modular router structure.](#\app\mainpy)
 
 ---
 
 - [\routes\auths.py](#\routes\authspy)
-- [# Summary: Google OAuth Authentication Module
+- [# Summary
 
-## Purpose
-FastAPI authentication router that handles Google OAuth 2.0 login flow for external users, including token generation and user management.
+**Purpose:** FastAPI authentication module for Google OAuth2 integration with JWT token generation.
 
-## Key Components
+**Key Logic:**
+- Configures Google OAuth2 client using environment variables (client ID, secret, redirect URI)
+- Implements database session dependency injection via `get_db()`
+- Contains commented-out OAuth flow endpoints that would:
+  1. Redirect users to Google login
+  2. Handle Google callback with token exchange
+  3. Store/retrieve user in `ExternalUser` database table
+  4. Generate JWT token for authenticated sessions
 
-**OAuth Configuration:**
-- Registers Google as OAuth provider with client credentials from environment variables
-- Configures Google's OAuth endpoints and required scopes (openid, email, profile)
+**Important Components:**
+- `OAuth` client configured for Google with email/profile scopes
+- `get_db()`: Dependency for database session management
+- Commented endpoints: `google_login()` and `google_callback()` (currently disabled)
+- JWT generation using HS256 algorithm with user_id, email, and role claims
 
-**Database Dependency:**
-- `get_db()`: Dependency injection function providing database session management with proper cleanup
-
-**Commented Implementation:**
-The actual login flow is currently disabled but includes:
-1. **Google Login** (`/google/login`): Initiates OAuth redirect to Google
-2. **Google Callback** (`/google/callback`): Handles OAuth response by:
-   - Extracting user info from Google's ID token
-   - Creating or retrieving `ExternalUser` from database
-   - Generating JWT token with user_id, email, and "external" role
-   - Returning bearer token to frontend
-
-## Important Logic
-- User upsert pattern: Check if Google user exists; create if new, otherwise use existing
-- JWT encoding using HS256 algorithm with custom secret
-- Token payload structure for role-based access control
-
-**Status:** Code appears to be in development/testing phase with core OAuth endpoints commented out.](#\routes\authspy)
+**Status:** Incomplete implementation - OAuth endpoints are commented out, suggesting this is work-in-progress or temporarily disabled code.](#\routes\authspy)
 
 ---
 
 - [\routes\gifts.py](#\routes\giftspy)
-- [# Code Summary: FastAPI Gifts Management API
+- [# Summary
 
-## **Purpose**
-REST API router for managing gift records with user authentication and database operations.
+## Purpose
+FastAPI router for managing gifts with CRUD operations. Handles fetching, searching, and adding gifts with JWT authentication and database persistence.
 
-## **Key Components**
+## Key Logic
 
-### **Pydantic Models**
-- `GiftCreate`: Input schema (name, brand, size, color)
-- `GiftPatch`: Partial update schema (all fields optional)
-- `Gift`: Complete gift object with ID
+**Authentication**: Validates JWT tokens from Authorization headers on protected endpoints.
 
-### **Database Functions**
-- `get_db()`: Dependency that provides SQLAlchemy session management with cleanup
+**Database Operations**:
+- `fetch_gifts()`: Retrieves all gifts for a user (requires valid JWT token)
+- `gifts_search()`: Searches gifts by column (name, brand, size, color, id, user_id) with case-insensitive matching
+- `add_gift()`: Creates new gift entries (incomplete in snippet)
 
-### **Endpoints**
+**Security**: 
+- Token verification via `verify_token()`
+- SQL injection prevention using SQLAlchemy ORM and `getattr()` with allowed columns whitelist
+- Authorization header validation
 
-1. **`GET /gifts/fetch/{user_id}`**
-   - Fetches all gifts for a specific user
-   - Requires JWT token in Authorization header
-   - Validates token before returning data
-   - Returns `List[GiftResponse]`
+## Important Components
 
-2. **`GET /gifts/searchby/{column}/{value}`**
-   - Dynamic search across allowed columns (id, name, brand, size, color, user_id)
-   - Case-insensitive filtering with whitespace trimming
-   - Uses `getattr()` for dynamic attribute access
-   - Returns matching gift records
+- **Pydantic Models**: `GiftCreate`, `Gift`, `GiftPatch` for request/response validation
+- **Database Helper**: `get_db()` dependency for session management
+- **Router**: `/gifts` prefix with endpoints for fetch, search, add operations
+- **Error Handling**: HTTPException for missing auth (401), invalid tokens, not found (404)
 
-3. **`POST /gifts/add/{user_id}`** (incomplete)
-   - Creates new gift for user
-   - Requires Authorization header
-   - Input validation via `GiftTemplate`](#\routes\giftspy)
+**Note**: The `add_gift()` endpoint definition is incomplete in the provided code.](#\routes\giftspy)
 
 ---
 
 - [\routes\share.py](#\routes\sharepy)
-- [# Summary
+- [# Code Summary
 
-**Purpose:** FastAPI router for managing sharable gift list links, allowing users to create shareable URLs and retrieve gift lists via tokens.
+## Purpose
+FastAPI router that handles shareable gift list links, allowing users to create unique share tokens and retrieve gift lists via those tokens.
 
-**Key Logic:**
-- Creates unique sharable links for gift lists associated with users
-- Uses tokens to provide anonymous access to shared gift lists
-- Retrieves all gifts belonging to a list owner via a share token
+## Key Logic
 
-**Important Functions:**
+**POST endpoint** (`/{user_id}`):
+- Creates a new `GiftsList` record with a user ID
+- Database auto-generates a unique `share_token` for the list
+- Returns a shareable URL containing the token
+- Includes error handling for database failures
 
-1. **`create_sharable_links(user_id)`** - POST endpoint
-   - Creates a new `GiftsList` record for the user
-   - Generates a unique `share_token` (auto-created by model)
-   - Returns a shareable URL with the token
-   - Includes error handling for database failures
+**GET endpoint** (`/token/{token}`):
+- Looks up a gift list by its share token
+- Retrieves all gifts belonging to that list's owner
+- Returns owner ID and associated gifts
+- Raises 401 error if token doesn't exist
 
-2. **`get_gifts(token)`** - GET endpoint
-   - Looks up gift list by `share_token`
-   - Validates token exists (401 error if not)
-   - Retrieves all gifts for the list owner
-   - Returns owner ID and associated gifts
-
-**Note:** The code has debug print statements and hardcoded localhost URL suitable for development.](#\routes\sharepy)
+## Important Components
+- **APIRouter**: Mounted at `/share` prefix for sharable link operations
+- **Database dependency injection**: Uses `get_db()` for session management
+- **Models used**: `GiftsList` (stores user_id + auto-generated share_token) and `Gifts`
+- **Error handling**: SQLAlchemy exception catching with rollback on create endpoint](#\routes\sharepy)
 
 ---
 
 - [\routes\users.py](#\routes\userspy)
-- [# User Management API Router
+- [# Code Summary
 
-## Purpose
-FastAPI router for user authentication and management endpoints, handling registration, login, user search, and token-based authorization.
+**Purpose:** FastAPI user authentication router handling user registration, login, and token-based access control.
 
-## Key Components
+**Key Components:**
 
-### Authentication
-- **`get_current_user()`** - Dependency that validates JWT tokens from request headers, decodes them, and retrieves the authenticated user from database. Returns 401 error if token is invalid/expired.
-- **OAuth2 scheme** - Uses bearer token authentication via `OAuth2PasswordBeaker`
+1. **Authentication Dependency (`get_current_user`):**
+   - Validates JWT tokens from request headers
+   - Decodes token using SECRET_KEY and extracts user_id
+   - Queries database for user and raises 401 error if invalid/expired
+   - Used as dependency for protected endpoints
 
-### Endpoints
+2. **User Endpoints:**
+   - **`/search/{id}`** - Retrieves a specific user by ID
+   - **`/post`** - Creates a user (basic creation)
+   - **`/register`** - User registration with password hashing and duplicate email check
+   - **`/login/basic`** - (Incomplete) Login endpoint
 
-1. **`GET /search/{id}`** - Retrieves a specific user by ID from database
-2. **`POST /post`** - Creates a new user (basic, no validation)
-3. **`POST /register`** - User registration with:
-   - Email uniqueness validation
+3. **Security Features:**
+   - OAuth2 password bearer token scheme
    - Password hashing using `hash_password()` utility
-   - Stores both plain and hashed password (security issue)
-4. **`POST /login/basic`** - Incomplete endpoint (code cuts off)
+   - JWT token validation using jose library
+   - Email uniqueness validation during registration
 
-## Key Logic
-- Uses SQLAlchemy ORM for database operations
-- JWT token validation via `jose` library
-- Password hashing for security
-- Email duplicate prevention on registration
+4. **Dependencies:**
+   - SQLAlchemy ORM for database operations
+   - FastAPI security modules for authentication
+   - Custom JWT handlers and password utilities
 
-## Security Notes
-⚠️ **Issues**: 
-- Storing plain text password alongside hashed version
-- Incomplete login](#\routes\userspy)
+**Status:** Code appears incomplete (login endpoint cut off) and has some inefficiencies (mixed database/list queries, storing both plain and hashed passwords).](#\routes\userspy)
 
 ---
 
 - [\utils\auth.py](#\utils\authpy)
-- [# Summary
+- [# Summary: Authentication & Security Module
 
-**Purpose:** Authentication and password security utilities for a FastAPI application using JWT tokens and bcrypt hashing.
+## Purpose
+Handles user authentication, password hashing, and JWT token validation for a FastAPI application.
 
-**Key Components:**
+## Key Components
 
-1. **Password Management:**
-   - `hash_password()` - Hashes passwords using bcrypt_sha256 algorithm via Passlib
-   - `verify_password()` - Validates plaintext password against stored hash
+**Password Management:**
+- `hash_password()` - Hashes passwords using bcrypt_sha256
+- `verify_password()` - Validates plain text password against stored hash
 
-2. **JWT Authentication:**
-   - `oauth2_scheme` - OAuth2 password bearer token scheme for extracting tokens from requests
-   - `get_user()` - Dependency function that:
-     - Extracts JWT token from request header
-     - Decodes token using HS256 algorithm and SECRET_KEY
-     - Retrieves user email from token payload ("sub" claim)
-     - Queries database for matching user
-     - Returns authenticated user or raises 401 HTTPException if invalid
+**JWT Token Security:**
+- `oauth2_scheme` - OAuth2 bearer token extraction from request headers
+- `SECRET_KEY` & `ALGORITHM` - JWT signing credentials (HS256)
 
-3. **Security Config:**
-   - Uses bcrypt with automatic deprecation handling for algorithm upgrades
-   - HS256 for JWT signing/verification
-   - Hardcoded SECRET_KEY (security concern - should use environment variables)
+**Main Logic:**
+- `get_user()` - FastAPI dependency that:
+  1. Extracts JWT token from request header (via `oauth2_scheme`)
+  2. Decodes token using SECRET_KEY
+  3. Retrieves email from token payload
+  4. Queries database for matching user
+  5. Returns user or raises 401 HTTPException if invalid
 
-**Main Logic Flow:** Password hashing on registration → JWT token generation on login → Token validation via `get_user()` dependency for protected endpoints.](#\utils\authpy)
+## Security Notes
+- Uses bcrypt for password hashing with auto-deprecation support
+- JWT validation guards endpoints requiring authentication
+- Returns 401 "Could not validate credentials" for invalid/missing tokens](#\utils\authpy)
 
 ---
 
 - [\utils\jwt_handlers.py](#\utils\jwthandlerspy)
-- [# JWT Token Management Module
+- [# JWT Token Authentication Module
 
-**Purpose:** Handles creation and verification of JWT access tokens for authentication.
+**Purpose:** Handles JWT token creation and verification for API authentication.
 
 **Key Components:**
 
-1. **Constants:**
-   - `SECRET_KEY`: Signing key for JWT encoding/decoding
-   - `ALGORITHM`: HS256 (HMAC-SHA256)
-   - `ACCESS_TOKEN_EXPIRE_MINUTES`: Default 30-minute token lifetime
+1. **Configuration Constants:**
+   - `SECRET_KEY`: Signing key for JWT tokens
+   - `ALGORITHM`: HS256 hash algorithm
+   - `ACCESS_TOKEN_EXPIRE_MINUTES`: Default token validity (30 min)
 
-2. **`create_acces_token(data, expires_delta)`** 
-   - Creates a signed JWT token from provided data
-   - Sets expiration to custom duration or default 30 minutes
+2. **`create_acces_token(data, expires_delta)`** (note: typo in function name)
+   - Creates JWT tokens with custom or default expiration
+   - Adds expiration claim ('exp') to payload
    - Returns encoded token string
 
 3. **`verify_token(token)`**
-   - Decodes and validates JWT signature
-   - Returns token payload (claims) if valid
-   - Returns `None` if token is invalid/expired
+   - Decodes and validates JWT tokens
+   - Returns payload dict if valid, `None` if JWTError occurs
+   - Silent failure on invalid tokens
 
-**Note:** Has a typo in function name (`acces_token` should be `access_token`). The SECRET_KEY should be externalized for security.](#\utils\jwthandlerspy)
+**⚠️ Security Issues:**
+- Hardcoded secret key should use environment variables
+- No exception handling details (logging)
+- Token errors silently fail instead of raising exceptions](#\utils\jwthandlerspy)
 
 ---
 
