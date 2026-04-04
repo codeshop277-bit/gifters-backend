@@ -29,27 +29,30 @@
 
 ### `\database.py`
 
-# Database Configuration Summary
+# Code Summary
 
-**Purpose:** Sets up SQLAlchemy ORM connection to a PostgreSQL database hosted on AWS RDS.
+## Purpose
+Database configuration and initialization file for a FastAPI gift-tracking application connecting to AWS RDS PostgreSQL database.
 
-**Key Components:**
+## Key Components
 
-1. **Database Connection**
-   - Creates engine with PostgreSQL credentials (RDS instance "gifters")
-   - Configures `SessionLocal` factory for database sessions with `autocommit=False, autoflush=False`
+**Database Connection Setup:**
+- Configures PostgreSQL connection to AWS RDS instance with credentials (host, port, user, password, database name)
+- Creates SQLAlchemy `engine` for database I/O and `SessionLocal` factory for creating database sessions
 
-2. **ORM Setup**
-   - `Base`: Declarative base class that all ORM models inherit from for table mapping
-   - `db`: Single session instance (instantiated globally)
+**Core Functions:**
+- `init_db()` - Creates all database tables based on ORM models inheriting from `Base`
+- `get_db()` - Generator function that yields a database session for dependency injection in API endpoints, ensuring proper cleanup with `finally` block
 
-3. **Critical Functions**
-   - `init_db()`: Creates all database tables based on models inheriting from `Base`
-   - `get_db()`: Dependency injection pattern—yields a session and ensures proper cleanup via try/finally
+**ORM Base:**
+- `Base = declarative_base()` - Factory that creates base class for all SQLAlchemy models; enables automatic table mapping
 
-**Security Note:** Database credentials hardcoded in source (should use environment variables in production).
+**Mock Data:**
+- `gifts_mock` - Sample gift items with id, name, brand, price
+- `users_list` - Sample user profiles with id, name, email
 
-**Commented-out Schema:** Shows expected Pydantic models for a Gift entity with fields like name, brand, size, color.
+## Important Notes
+⚠️ **Security Issue**: Database credentials hardcoded in source code (should use environment variables)
 
 ---
 
