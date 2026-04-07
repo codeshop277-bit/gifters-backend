@@ -29,30 +29,32 @@
 
 ### `\database.py`
 
-# Database Configuration & Initialization
+# Database Configuration & Setup
 
-**Purpose:** Sets up SQLAlchemy ORM connection to a PostgreSQL database and provides utilities for database session management.
+**Purpose:** Initializes SQLAlchemy database connection and session management for a PostgreSQL database.
 
-## Key Components:
+**Key Components:**
 
 1. **Database Connection**
-   - Connects to AWS RDS PostgreSQL instance (`gifters.cx8wyeoaoo49.eu-north-1.rds.amazonaws.com`)
-   - Credentials embedded in `DATABASE_URL` string
+   - Connects to AWS RDS PostgreSQL instance using credentials and connection string
+   - Creates `engine` (core DB interface) via `create_engine()`
 
-2. **Core Objects**
-   - `engine` - Database connection pool
-   - `SessionLocal` - Factory for creating database sessions
-   - `Base` - Declarative base class; all ORM models inherit from this for automatic table mapping
+2. **Session Factory**
+   - `SessionLocal` = factory for creating ORM sessions
+   - `get_db()` = dependency injection function that yields a session and safely closes it (useful for FastAPI)
 
-3. **Important Functions**
-   - `init_db()` - Creates all database tables defined in ORM models
-   - `get_db()` - Generator function providing session dependency injection (yields session, ensures cleanup)
+3. **ORM Base**
+   - `Base = declarative_base()` = metaclass for all SQLAlchemy models to inherit from
+   - Enables automatic table mapping
 
-4. **Mock Data**
-   - `gifts_mock` - Sample gift data (3 items with id, name, brand, price)
-   - `users_list` - Sample user data (3 users with id, name, email)
+4. **Database Initialization**
+   - `init_db()` = creates all tables defined in models that inherit from `Base`
 
-**Note:** ⚠️ Contains hardcoded database credentials (security risk - should use environment variables).
+**Important Functions:**
+- `get_db()` - FastAPI dependency for injecting DB sessions into routes
+- `init_db()` - Initializes schema on app startup
+
+⚠️ **Security Note:** Database credentials are hardcoded; should use environment variables instead.
 
 ---
 
